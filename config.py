@@ -8,7 +8,7 @@ KEYWORDS = [
     "LV Belt"
 ]
 
-JP_SIZES = ["27", "27.5", "28"]  # ≈ EU 42–43
+JP_SIZES = ["42", "42.5", "43"]  # ≈ EU 42–43
 MAX_PRICE_PLN = 1000
 
 JPY_TO_PLN = 0.027  # bezpieczny kurs
