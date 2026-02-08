@@ -62,13 +62,7 @@ async def search_mercari(keyword):
                     img_tag = product.select_one("img")
                     img = img_tag["src"] if img_tag else None
 
-                    size = "?"
-                    for s in EU_SIZES:
-                        if s in title:
-                            size = s
-
-                    if size == "?":
-                        continue
+                 size = "brak / nieznany"
 
                     items.append({
                         "title": title[:250],
