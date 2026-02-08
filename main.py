@@ -1,8 +1,6 @@
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
-import time
-
 from config import *
 
 HEADERS = {
@@ -33,68 +31,59 @@ async def send_to_discord(item):
 
 async def search_mercari(keyword):
     url = f"https://www.mercari.com/jp/search/?keyword={keyword}"
-    results = []
+    items = []
 
     async with aiohttp.ClientSession(headers=HEADERS) as session:
-        async with session.get(url) as r:
-            soup = BeautifulSoup(await r.text(), "html.parser")
+        async with session.get(url) as resp:
+            html = await resp.text()
+            soup = BeautifulSoup(html, "html.parser")
 
-            for item in soup.select("a"):
+            for product in soup.select("li"):
                 try:
-                    title = item.text.strip()
-                    if not title:
+                    title_tag = product.select_one("h3")
+                    if not title_tag:
                         continue
+                    title = title_tag.text.strip()
 
-                    link = "https://www.mercari.com" + item.get("href", "")
-                    if link in sent_links:
+                    link_tag = product.select_one("a")
+                    if not link_tag:
                         continue
+                    link = "https://www.mercari.com" + link_tag.get("href")
 
-                    price_text = item.text
-                    if "¥" not in price_text:
+                    price_tag = product.select_one(".items-box-price__current-price")
+                    if not price_tag:
                         continue
-
-                    price_jpy = int(price_text.split("¥")[-1].replace(",", "").strip())
+                    price_jpy = int(price_tag.text.replace("¥", "").replace(",", ""))
                     price_pln = jpy_to_pln(price_jpy)
 
                     if price_pln > MAX_PRICE_PLN:
                         continue
 
-                    img = item.find("img")
-                    img_url = img["src"] if img else None
+                    img_tag = product.select_one("img")
+                    img = img_tag["src"] if img_tag else None
 
                     size = "?"
-                    for s in JP_SIZES:
+                    for s in EU_SIZES:
                         if s in title:
                             size = s
 
-                    results.append({
+                    if size == "?":
+                        continue
+
+                    items.append({
                         "title": title[:250],
                         "price_pln": price_pln,
                         "url": link,
-                        "image": img_url,
+                        "image": img,
                         "site": "Mercari JP",
                         "size": size
                     })
 
-                    sent_links.add(link)
-
                 except:
                     continue
 
-    return results
+    return items
 
-async def main_loop():
-    while True:
-        print("🔍 Sprawdzam...")
-        for keyword in KEYWORDS:
-            items = await search_mercari(keyword)
-            for item in items:
-                await send_to_discord(item)
-                await asyncio.sleep(1)
-
-        await asyncio.sleep(CHECK_INTERVAL)
-
-# --- gdzieś wcześniej w pliku ---
 async def test_webhook():
     test_item = {
         "title": "Test Item",
@@ -106,10 +95,20 @@ async def test_webhook():
     }
     await send_to_discord(test_item)
 
-# --- koniec pliku ---
-if __name__ == "__main__":
-    # Testujemy webhook
-    asyncio.run(test_webhook())
+async def main_loop():
+    while True:
+        print("🔍 Sprawdzam wszystkie frazy...")
+        for keyword in KEYWORDS:
+            items = await search_mercari(keyword)
+            print(f"🔹 {keyword}: {len(items)} wyników")
+            for item in items:
+                print(f"✅ Wysyłam: {item['title']}")
+                await send_to_discord(item)
+                await asyncio.sleep(1)
 
-    # Teraz odpala się główny bot
+        print(f"⏳ Czekam {CHECK_INTERVAL}s")
+        await asyncio.sleep(CHECK_INTERVAL)
+
+if __name__ == "__main__":
+    asyncio.run(test_webhook())
     asyncio.run(main_loop())
