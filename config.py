@@ -12,4 +12,4 @@ JP_SIZES = ["42", "42.5", "43"]  # ≈ EU 42–43
 MAX_PRICE_PLN = 1000
 
 JPY_TO_PLN = 0.027  # bezpieczny kurs
-CHECK_INTERVAL = 1800  # 30 minut
+CHECK_INTERVAL = 60  # 1 minut
