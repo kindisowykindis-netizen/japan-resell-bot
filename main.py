@@ -94,15 +94,8 @@ async def main_loop():
 
         await asyncio.sleep(CHECK_INTERVAL)
 
-if __name__ == "__main__":
-    
-    # Testujemy webhook
-    asyncio.run(test_webhook())
-    
-    # Teraz odpala się główny bot
-
-    asyncio.run(main_loop())
-    async def test_webhook():
+# --- gdzieś wcześniej w pliku ---
+async def test_webhook():
     test_item = {
         "title": "Test Item",
         "price_pln": 999,
@@ -112,3 +105,11 @@ if __name__ == "__main__":
         "size": "42"
     }
     await send_to_discord(test_item)
+
+# --- koniec pliku ---
+if __name__ == "__main__":
+    # Testujemy webhook
+    asyncio.run(test_webhook())
+
+    # Teraz odpala się główny bot
+    asyncio.run(main_loop())
