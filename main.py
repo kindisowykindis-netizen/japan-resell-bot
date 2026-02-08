@@ -101,7 +101,7 @@ if __name__ == "__main__":
     
     # Teraz odpala się główny bot
 
-    asyncio.run(main_loop()):
+    asyncio.run(main_loop())
     async def test_webhook():
     test_item = {
         "title": "Test Item",
